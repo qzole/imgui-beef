@@ -1,0 +1,7 @@
+FileVersion = 1
+Dependencies = {corlib = "*", imgui-beef = "*", SDL2 = "*"}
+
+[Project]
+Name = "imgui-impl-sdl-renderer-beef"
+TargetType = "BeefLib"
+DefaultNamespace = "imgui_beef"
