@@ -17,6 +17,7 @@ As of the current Beef version (0.42.3) the SDL bindings need two modifications 
     - Several ImGui structs used for communicating with ImGui
 - Windowing / Input backends:
     - SDL, converted to Beef based on offical ImGui implementation.
+    - GLFW, converted to Beef based on offical ImGui implementation.
 - Rendering backends:
     - SDL Renderer, converted to Beef based on: https://github.com/Tyyppi77/imgui_sdl
 
@@ -24,7 +25,6 @@ As of the current Beef version (0.42.3) the SDL bindings need two modifications 
 - Finish bindings for main ImGui structs and their public API
 - Windowing / Input backends:
     - Allegro 5
-    - GLFW
     - GLUT/FreeGLUT
     - OSX / Cocoa
     - Windows API
