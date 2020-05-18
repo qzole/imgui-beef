@@ -20,6 +20,7 @@ As of the current Beef version (0.42.3) the SDL bindings need two modifications 
     - GLFW, converted to Beef based on offical ImGui implementation.
 - Rendering backends:
     - SDL Renderer, converted to Beef based on: https://github.com/Tyyppi77/imgui_sdl
+    - OpenGL3, converted to Beef based on offical ImGui implementation with slight change to initialization.
 
 ## TODO:
 - Finish bindings for main ImGui structs and their public API
@@ -35,7 +36,6 @@ As of the current Beef version (0.42.3) the SDL bindings need two modifications 
     - DirectX12
     - Metal
     - OpenGL2
-    - OpenGL3
     - Vulkan
 - Combined backends:
     - Marmalade + IwGx
