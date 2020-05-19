@@ -1,8 +1,7 @@
 # ImGui-Beef
 **imgui-beef** is a Beef wrapper library for [Dear ImGui v1.75](https://github.com/ocornut/imgui)
 
-> **Attention!** This binding is still in development. Bugs may occur.
-	Binaries are removed from repo. You can download this library with binaries from [Release page](https://github.com/qzole/imgui-beef/releases)!
+> **Attention!** This binding is still in development, bugs may occur.
 
 This wrapper currently uses [cimgui](https://github.com/cimgui/cimgui) bindings, since I couldn't wrap the c++ api of ImGui because of the hidden "bf" namespace when using [StdCall] property.
 
@@ -16,8 +15,8 @@ As of the current Beef version (0.42.3) the SDL bindings need two modifications 
     - The main ImGui API more or less complete
     - Several ImGui structs used for communicating with ImGui
 - Windowing / Input backends:
-    - SDL, converted to Beef based on offical ImGui implementation.
-    - GLFW, converted to Beef based on offical ImGui implementation.
+    - SDL, converted to Beef based on offical ImGui implementation. Needs offical SDL Beef bindings.
+    - GLFW, converted to Beef based on offical ImGui implementation. Needs GLFW Beef bindings: https://github.com/MineGame159/glfw-beef
 - Rendering backends:
     - SDL Renderer, converted to Beef based on: https://github.com/Tyyppi77/imgui_sdl
     - OpenGL3, converted to Beef based on offical ImGui implementation with slight change to initialization.
