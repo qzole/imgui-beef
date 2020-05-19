@@ -2,7 +2,6 @@ FileVersion = 1
 Dependencies = {corlib = "*", imgui-beef = "*"}
 
 [Project]
-Name = "imgui-impl-opengl3-renderer-beef"
+Name = "imgui-impl-opengl3"
 TargetType = "BeefLib"
-StartupObject = "Program"
 DefaultNamespace = "imgui_beef"
