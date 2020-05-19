@@ -60,15 +60,15 @@ namespace imgui_beef {
 		private static Glfw.KeyCallback                         g_PrevUserCallbackKey = null;
 		private static Glfw.CharCallback                        g_PrevUserCallbackChar = null;
 
-		private static char8* ImGui_ImplGlfw_GetClipboardText(void* user_data) {
+		private static char8* GetClipboardText(void* user_data) {
 		    return Glfw.[Friend]glfwGetClipboardString((GlfwWindow*) user_data);
 		}
 
-		private static void ImGui_ImplGlfw_SetClipboardText(void* user_data, char8* text) {
+		private static void SetClipboardText(void* user_data, char8* text) {
 		    Glfw.[Friend]glfwSetClipboardString((GlfwWindow*) user_data, text);
 		}
 
-		public static bool ImGui_ImplGlfw_Init(GlfwWindow* window, bool installCallbacks, GlfwClientApi clientApi)
+		public static bool Init(GlfwWindow* window, bool installCallbacks, GlfwClientApi clientApi)
 		{
 		    g_Window = window;
 		    g_Time = 0.0;
@@ -103,8 +103,8 @@ namespace imgui_beef {
 			io.KeyMap[(int) ImGui.Key.Y] = (.) GlfwInput.Key.Y;
 			io.KeyMap[(int) ImGui.Key.Z] = (.) GlfwInput.Key.Z;
 
-		    io.SetClipboardTextFn = => ImGui_ImplGlfw_SetClipboardText;
-		    io.GetClipboardTextFn = => ImGui_ImplGlfw_GetClipboardText;
+		    io.SetClipboardTextFn = => SetClipboardText;
+		    io.GetClipboardTextFn = => GetClipboardText;
 		    io.ClipboardUserData = g_Window;
 #if BF_PLATFORM_WINDOWS
 		    io.ImeWindowHandle = Glfw.GetWin32Window(g_Window);
@@ -140,25 +140,25 @@ namespace imgui_beef {
 		    g_PrevUserCallbackChar = null;
 		    if (installCallbacks) {
 		        g_InstalledCallbacks = true;
-		        g_PrevUserCallbackMousebutton = Glfw.SetMouseButtonCallback(window, new => ImGui_ImplGlfw_MouseButtonCallback, false);
-		        g_PrevUserCallbackScroll = Glfw.SetScrollCallback(window, new => ImGui_ImplGlfw_ScrollCallback, false);
-		        g_PrevUserCallbackKey = Glfw.SetKeyCallback(window, new => ImGui_ImplGlfw_KeyCallback, false);
-		        g_PrevUserCallbackChar = Glfw.SetCharCallback(window, new => ImGui_ImplGlfw_CharCallback, false);
+		        g_PrevUserCallbackMousebutton = Glfw.SetMouseButtonCallback(window, new => MouseButtonCallback, false);
+		        g_PrevUserCallbackScroll = Glfw.SetScrollCallback(window, new => ScrollCallback, false);
+		        g_PrevUserCallbackKey = Glfw.SetKeyCallback(window, new => KeyCallback, false);
+		        g_PrevUserCallbackChar = Glfw.SetCharCallback(window, new => CharCallback, false);
 		    }
 
 		    g_ClientApi = clientApi;
 		    return true;
 		}
 
-		public static bool ImGui_ImplGlfw_InitForOpenGL(GlfwWindow* window, bool installCallbacks) {
-			return ImGui_ImplGlfw_Init(window, installCallbacks, .GlfwClientApi_OpenGL);
+		public static bool InitForOpenGL(GlfwWindow* window, bool installCallbacks) {
+			return Init(window, installCallbacks, .GlfwClientApi_OpenGL);
 		}
 
-		public static bool ImGui_ImplGlfw_InitForVulkan(GlfwWindow* window, bool installCallbacks) {
-			return ImGui_ImplGlfw_Init(window, installCallbacks, .GlfwClientApi_Vulkan);
+		public static bool InitForVulkan(GlfwWindow* window, bool installCallbacks) {
+			return Init(window, installCallbacks, .GlfwClientApi_Vulkan);
 		}
 
-		public static void ImGui_ImplGlfw_Shutdown() {
+		public static void Shutdown() {
 			if (g_InstalledCallbacks) {
 			    Glfw.SetMouseButtonCallback(g_Window, g_PrevUserCallbackMousebutton);
 			    Glfw.SetScrollCallback(g_Window, g_PrevUserCallbackScroll);
@@ -174,7 +174,7 @@ namespace imgui_beef {
 			g_ClientApi = .GlfwClientApi_Unknown;
 		}
 
-		public static void ImGui_ImplGlfw_NewFrame() {
+		public static void NewFrame() {
 			ref ImGui.IO io = ref ImGui.GetIO();
 			ImGui.ASSERT!(io.Fonts.IsBuilt(), "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
 
@@ -194,14 +194,14 @@ namespace imgui_beef {
 			io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f/60.0f);
 			g_Time = current_time;
 
-			ImGui_ImplGlfw_UpdateMousePosAndButtons();
-			ImGui_ImplGlfw_UpdateMouseCursor();
+			UpdateMousePosAndButtons();
+			UpdateMouseCursor();
 
 			// Update game controllers (if enabled and available)
-			ImGui_ImplGlfw_UpdateGamepads();
+			UpdateGamepads();
 		}
 
-		private static void ImGui_ImplGlfw_UpdateMousePosAndButtons() {
+		private static void UpdateMousePosAndButtons() {
 		    // Update buttons
 		    ref ImGui.IO io = ref ImGui.GetIO();
 		    for (int i = 0; i < io.MouseDown.Count; i++) {
@@ -231,7 +231,7 @@ namespace imgui_beef {
 		    }
 		}
 
-		private static void ImGui_ImplGlfw_UpdateMouseCursor() {
+		private static void UpdateMouseCursor() {
 		    ref ImGui.IO io = ref ImGui.GetIO();
 		    if ((io.ConfigFlags.HasFlag(.NoMouseCursorChange)) || Glfw.GetInputMode(g_Window, .Cursor) == GlfwInput.CursorInputMode.Disabled.Underlying)
 		        return;
@@ -249,7 +249,7 @@ namespace imgui_beef {
 		    }
 		}
 
-		private static void ImGui_ImplGlfw_UpdateGamepads() {
+		private static void UpdateGamepads() {
 		    ref ImGui.IO io = ref ImGui.GetIO();
 			io.NavInputs = default;
 		    if (!io.ConfigFlags.HasFlag(ImGui.ConfigFlags.NavEnableGamepad)) return;
@@ -294,7 +294,7 @@ namespace imgui_beef {
 		// - When calling Init with 'installCallbacks=true': GLFW callbacks will be installed for you. They will call user's previously installed callbacks, if any.
 		// - When calling Init with 'installCallbacks=false': GLFW callbacks won't be installed. You will need to call those function yourself from your own GLFW callbacks.
 
-		public static void ImGui_ImplGlfw_MouseButtonCallback(GlfwWindow* window, GlfwInput.MouseButton button, GlfwInput.Action action, int mods) {
+		public static void MouseButtonCallback(GlfwWindow* window, GlfwInput.MouseButton button, GlfwInput.Action action, int mods) {
 			if (g_PrevUserCallbackMousebutton != null)
 			    g_PrevUserCallbackMousebutton(window, button, action, mods);
 
@@ -302,7 +302,7 @@ namespace imgui_beef {
 			    g_MouseJustPressed[button.Underlying] = true;				  
 		}
 
-		public static void ImGui_ImplGlfw_ScrollCallback(GlfwWindow* window, double xoffset, double yoffset) {
+		public static void ScrollCallback(GlfwWindow* window, double xoffset, double yoffset) {
 			if (g_PrevUserCallbackScroll != null)
 			    g_PrevUserCallbackScroll(window, xoffset, yoffset);
 
@@ -311,7 +311,7 @@ namespace imgui_beef {
 			io.MouseWheel += (float) yoffset;
 		}
 
-		public static void ImGui_ImplGlfw_KeyCallback(GlfwWindow* window, GlfwInput.Key key, int scancode, GlfwInput.Action action, int mods) {
+		public static void KeyCallback(GlfwWindow* window, GlfwInput.Key key, int scancode, GlfwInput.Action action, int mods) {
 			if (g_PrevUserCallbackKey != null)
 			    g_PrevUserCallbackKey(window, key, scancode, action, mods);
 
@@ -330,7 +330,7 @@ namespace imgui_beef {
 #endif
 		}
 
-		public static void ImGui_ImplGlfw_CharCallback(GlfwWindow* window, uint c) {
+		public static void CharCallback(GlfwWindow* window, uint c) {
 			if (g_PrevUserCallbackChar != null)
 			    g_PrevUserCallbackChar(window, c);
 
