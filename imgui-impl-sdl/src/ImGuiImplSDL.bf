@@ -59,7 +59,8 @@ namespace imgui_beef
 		private static SDL.Window*  g_Window = null;
 		private static uint64       g_Time = 0;
 		private static bool[3]      g_MousePressed = .( false, false, false );
-		private static SDL.SDL_Cursor*[(.)ImGui.MouseCursor.COUNT] g_MouseCursors = .(null,);
+		//private static SDL.SDL_Cursor*[(.)ImGui.MouseCursor.COUNT] g_MouseCursors = .(null,); // There is a compiler bug in Beef currently and this isn't working.
+		private static SDL.SDL_Cursor*[] g_MouseCursors = null;
 		private static char8*       g_ClipboardTextData = null;
 		private static bool         g_MouseCanUseGlobalState = true;
 
@@ -167,6 +168,7 @@ namespace imgui_beef
 			io.ClipboardUserData = null;
 
 			// Load mouse cursors
+			g_MouseCursors = new SDL.SDL_Cursor*[(.)ImGui.MouseCursor.COUNT];
 			g_MouseCursors[(int)ImGui.MouseCursor.Arrow] = SDL.CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
 			g_MouseCursors[(int)ImGui.MouseCursor.TextInput] = SDL.CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
 			g_MouseCursors[(int)ImGui.MouseCursor.ResizeAll] = SDL.CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEALL);
@@ -204,7 +206,8 @@ namespace imgui_beef
 			// Destroy SDL mouse cursors
 			for (ImGui.MouseCursor cursor_n = 0; cursor_n < ImGui.MouseCursor.COUNT; cursor_n++)
 				SDL.FreeCursor(g_MouseCursors[(int)cursor_n]);
-			g_MouseCursors = default;
+			delete g_MouseCursors;
+			//g_MouseCursors = default;
 		}
 
 		private static void UpdateMousePosAndButtons()
