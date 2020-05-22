@@ -561,7 +561,7 @@ namespace imgui_beef
 				}
 				
 				order.Add(key);
-				container.Add(.(key, value));
+				container.Add(key, value);
 	
 				Clean();
 			}
