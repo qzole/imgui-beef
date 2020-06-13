@@ -115,7 +115,7 @@ namespace imgui_beef
 		//    returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
 		// - Note that the bottom of window stack always contains a window called "Debug".
 		[LinkName("igBegin")]
-		public static extern void Begin(char8* name, bool* p_open = null, WindowFlags flags = 0);
+		public static extern bool Begin(char8* name, bool* p_open = null, WindowFlags flags = 0);
 		[LinkName("igEnd")]
 		public static extern void End();
 
@@ -125,9 +125,9 @@ namespace imgui_beef
 		// - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 		//   Always call a matching EndChild() for each BeginChild() call, regardless of its return value [as with Begin: this is due to legacy reason and inconsistent with most BeginXXX functions apart from the regular Begin() which behaves like BeginChild().]
 		[LinkName("igBeginChildStr")]
-		public static extern void BeginChild(char8* str_id, Vec2 size = default, bool border = false, WindowFlags flags = 0);
+		public static extern bool BeginChild(char8* str_id, Vec2 size = default, bool border = false, WindowFlags flags = 0);
 		[LinkName("igBeginChildID")]
-		public static extern void BeginChild(ImGuiID id, Vec2 size = default, bool border = false, WindowFlags flags = 0);
+		public static extern bool BeginChild(ImGuiID id, Vec2 size = default, bool border = false, WindowFlags flags = 0);
 		[LinkName("igEndChild")]
 		public static extern void EndChild();
 

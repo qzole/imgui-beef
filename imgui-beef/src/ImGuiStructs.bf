@@ -603,23 +603,23 @@ namespace imgui_beef
 		[CRepr]
 		public struct FontConfig
 		{
-			void*           FontData;               //          // TTF/OTF data
-			int32           FontDataSize;           //          // TTF/OTF data size
-			bool            FontDataOwnedByAtlas;   // true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
-			int32           FontNo;                 // 0        // Index of font within TTF/OTF file
-			float           SizePixels;             //          // Size in pixels for rasterizer (more or less maps to the resulting font height).
-			int32           OversampleH;            // 3        // Rasterize at higher quality for sub-pixel positioning. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
-			int32           OversampleV;            // 1        // Rasterize at higher quality for sub-pixel positioning. We don't use sub-pixel positions on the Y axis.
-			bool            PixelSnapH;             // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
-			Vec2            GlyphExtraSpacing;      // 0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
-			Vec2            GlyphOffset;            // 0, 0     // Offset all glyphs from this font input.
-			ImWchar*        GlyphRanges;            // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
-			float           GlyphMinAdvanceX;       // 0        // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
-			float           GlyphMaxAdvanceX;       // FLT_MAX  // Maximum AdvanceX for glyphs
-			bool            MergeMode;              // false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
-			uint32          RasterizerFlags;        // 0x00     // Settings for custom font rasterizer (e.g. ImGuiFreeType). Leave as zero if you aren't using one.
-			float           RasterizerMultiply;     // 1.0f     // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
-			ImWchar         EllipsisChar;           // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
+			public void*           FontData;               //          // TTF/OTF data
+			public int32           FontDataSize;           //          // TTF/OTF data size
+			public bool            FontDataOwnedByAtlas;   // true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
+			public int32           FontNo;                 // 0        // Index of font within TTF/OTF file
+			public float           SizePixels;             //          // Size in pixels for rasterizer (more or less maps to the resulting font height).
+			public int32           OversampleH;            // 3        // Rasterize at higher quality for sub-pixel positioning. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
+			public int32           OversampleV;            // 1        // Rasterize at higher quality for sub-pixel positioning. We don't use sub-pixel positions on the Y axis.
+			public bool            PixelSnapH;             // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
+			public Vec2            GlyphExtraSpacing;      // 0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
+			public Vec2            GlyphOffset;            // 0, 0     // Offset all glyphs from this font input.
+			public ImWchar*        GlyphRanges;            // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
+			public float           GlyphMinAdvanceX;       // 0        // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
+			public float           GlyphMaxAdvanceX;       // FLT_MAX  // Maximum AdvanceX for glyphs
+			public bool            MergeMode;              // false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
+			public uint32          RasterizerFlags;        // 0x00     // Settings for custom font rasterizer (e.g. ImGuiFreeType). Leave as zero if you aren't using one.
+			public float           RasterizerMultiply;     // 1.0f     // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
+			public ImWchar         EllipsisChar;           // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
 
 			// [Internal]
 			char8[40]       Name;                   // Name (strictly to ease debugging)
@@ -666,23 +666,23 @@ namespace imgui_beef
 				set mut { codepointVisible = value;  }
 			}
 			private uint32 codepointVisible;
-			float           AdvanceX;           // Distance to next character (= data from font + ImFontConfig::GlyphExtraSpacing.x baked in)
-			float           X0, Y0, X1, Y1;     // Glyph corners
-			float           U0, V0, U1, V1;     // Texture coordinates
+			public float           AdvanceX;           // Distance to next character (= data from font + ImFontConfig::GlyphExtraSpacing.x baked in)
+			public float           X0, Y0, X1, Y1;     // Glyph corners
+			public float           U0, V0, U1, V1;     // Texture coordinates
 		};
 
 		// See ImFontAtlas::AddCustomRectXXX functions.
 		[CRepr]
 		public struct FontAtlasCustomRect
 		{
-			uint32          ID;             // Input    // User ID. Use < 0x110000 to map into a font glyph, >= 0x110000 for other/internal/custom texture data.
-			uint16          Width, Height;  // Input    // Desired rectangle dimension
-			uint16          X, Y;           // Output   // Packed position in Atlas
-			float           GlyphAdvanceX;  // Input    // For custom font glyphs only (ID < 0x110000): glyph xadvance
-			Vec2            GlyphOffset;    // Input    // For custom font glyphs only (ID < 0x110000): glyph display offset
-			Font*           Font;           // Input    // For custom font glyphs only (ID < 0x110000): target font
-			this()          { ID = 0xFFFFFFFF; Width = Height = 0; X = Y = 0xFFFF; GlyphAdvanceX = 0.0f; GlyphOffset = .(0,0); Font = null; }
-			bool IsPacked() { return X != 0xFFFF; }
+			public uint32          ID;             // Input    // User ID. Use < 0x110000 to map into a font glyph, >= 0x110000 for other/internal/custom texture data.
+			public uint16          Width, Height;  // Input    // Desired rectangle dimension
+			public uint16          X, Y;           // Output   // Packed position in Atlas
+			public float           GlyphAdvanceX;  // Input    // For custom font glyphs only (ID < 0x110000): glyph xadvance
+			public Vec2            GlyphOffset;    // Input    // For custom font glyphs only (ID < 0x110000): glyph display offset
+			public Font*           Font;           // Input    // For custom font glyphs only (ID < 0x110000): target font
+			public this()          { ID = 0xFFFFFFFF; Width = Height = 0; X = Y = 0xFFFF; GlyphAdvanceX = 0.0f; GlyphOffset = .(0,0); Font = null; }
+			public bool IsPacked() { return X != 0xFFFF; }
 		};
 
 		// Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
@@ -703,37 +703,70 @@ namespace imgui_beef
 		// - Even though many functions are suffixed with "TTF", OTF data is supported just as well.
 		// - This is an old API and it is currently awkward for those and and various other reasons! We will address them in the future!
 		[CRepr]
-		public struct FontAtlas // TODO finish rest of FontAtlas
+		public struct FontAtlas
 		{
-			//IMGUI_API ImFontAtlas();
-			//IMGUI_API ~ImFontAtlas();
-			//IMGUI_API ImFont*           AddFont(const ImFontConfig* font_cfg);
-			//IMGUI_API ImFont*           AddFontDefault(const ImFontConfig* font_cfg = NULL);
-			//IMGUI_API ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);
-			//IMGUI_API ImFont*           AddFontFromMemoryTTF(void* font_data, int font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
-			//IMGUI_API ImFont*           AddFontFromMemoryCompressedTTF(const void* compressed_font_data, int compressed_font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
-			//IMGUI_API ImFont*           AddFontFromMemoryCompressedBase85TTF(const char* compressed_font_data_base85, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);              // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
-			//IMGUI_API void              ClearInputData();           // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
-			//IMGUI_API void              ClearTexData();             // Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
-			//IMGUI_API void              ClearFonts();               // Clear output font data (glyphs storage, UV coordinates).
-			//IMGUI_API void              Clear();                    // Clear all input and output.
+			[LinkName("ImFontAtlas_ImFontAtlas")]
+			private static extern FontAtlas* ImFontAtlasImpl();
+			public FontAtlas*                ImFontAtlas() mut { return ImFontAtlasImpl(); }
+			[LinkName("ImFontAtlas_destroy")]
+			private static extern void DestroyImpl(FontAtlas* self);
+			public void                Destroy() mut { DestroyImpl(&this); }
+
+			[LinkName("ImFontAtlas_AddFont")]
+			private static extern Font* AddFontImpl(FontAtlas* self, FontConfig* font_cfg);
+			public Font*                AddFont(FontConfig* font_cfg) mut { return AddFontImpl(&this, font_cfg); }
+			[LinkName("ImFontAtlas_AddFontDefault")]
+			private static extern Font* AddFontDefaultImpl(FontAtlas* self, FontConfig* font_cfg);
+			public Font*                AddFontDefault(FontConfig* font_cfg = null) mut { return AddFontDefaultImpl(&this, font_cfg); }
+			[LinkName("ImFontAtlas_AddFontFromFileTTF")]
+			private static extern Font* AddFontFromFileTTFImpl(FontAtlas* self, char8* filename, float size_pixels, FontConfig* font_cfg, ImWchar* glyph_ranges);
+			public Font*                AddFontFromFileTTF(char8* filename, float size_pixels, FontConfig* font_cfg = null, ImWchar* glyph_ranges = null) mut { return AddFontFromFileTTFImpl(&this, filename, size_pixels, font_cfg, glyph_ranges); }
+			[LinkName("ImFontAtlas_AddFontFromMemoryTTF")]
+			private static extern Font* AddFontFromMemoryTTFImpl(FontAtlas* self, void* font_data, int font_size, float size_pixels, FontConfig* font_cfg, ImWchar* glyph_ranges); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
+			public Font*                AddFontFromMemoryTTF(void* font_data, int font_size, float size_pixels, FontConfig* font_cfg = null, ImWchar* glyph_ranges = null) mut { return AddFontFromMemoryTTFImpl(&this, font_data, font_size, size_pixels, font_cfg, glyph_ranges); }
+			[LinkName("ImFontAtlas_AddFontFromMemoryCompressedTTF")]
+			private static extern Font* AddFontFromMemoryCompressedTTFImpl(FontAtlas* self, void* compressed_font_data, int compressed_font_size, float size_pixels, FontConfig* font_cfg, ImWchar* glyph_ranges); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
+			public Font*                AddFontFromMemoryCompressedTTF(void* compressed_font_data, int compressed_font_size, float size_pixels, FontConfig* font_cfg = null, ImWchar* glyph_ranges = null) mut { return AddFontFromMemoryCompressedTTFImpl(&this, compressed_font_data, compressed_font_size, size_pixels, font_cfg, glyph_ranges); }
+			[LinkName("ImFontAtlas_AddFontFromMemoryCompressedBase85TTF")]
+			private static extern Font* AddFontFromMemoryCompressedBase85TTFImpl(FontAtlas* self, char8* compressed_font_data_base85, float size_pixels, FontConfig* font_cfg, ImWchar* glyph_ranges); // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
+			public Font*                AddFontFromMemoryCompressedBase85TTF(char8* compressed_font_data_base85, float size_pixels, FontConfig* font_cfg = null, ImWchar* glyph_ranges = null) mut { return AddFontFromMemoryCompressedBase85TTFImpl(&this, compressed_font_data_base85, size_pixels, font_cfg, glyph_ranges); }
+			[LinkName("ImFontAtlas_ClearInputData")]
+			private static extern void ClearInputDataImpl(FontAtlas* self);           // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
+			public void                ClearInputData() mut { ClearInputDataImpl(&this); }
+			[LinkName("ImFontAtlas_ClearTexData")]
+			private static extern void ClearTexDataImpl(FontAtlas* self);             // Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
+			public void                ClearTexData() mut { ClearTexDataImpl(&this); }
+			[LinkName("ImFontAtlas_ClearFonts")]
+			private static extern void ClearFontsImpl(FontAtlas* self);               // Clear output font data (glyphs storage, UV coordinates).
+			public void                ClearFonts() mut { ClearFontsImpl(&this); }
+			[LinkName("ImFontAtlas_Clear")]         
+			private static extern void ClearImpl(FontAtlas* self);                    // Clear all input and output.
+			public void                Clear() mut { ClearImpl(&this); }
 
 			// Build atlas, retrieve pixel data.
 			// User is in charge of copying the pixels into graphics memory (e.g. create a texture with your engine). Then store your texture handle with SetTexID().
 			// The pitch is always = Width * BytesPerPixels (1 or 4)
 			// Building in RGBA32 format is provided for convenience and compatibility, but note that unless you manually manipulate or copy color data into
+			[LinkName("ImFontAtlas_Build")]
 			// the texture (e.g. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
-			//IMGUI_API bool              Build();                    // Build pixels data. This is called automatically for you by the GetTexData*** functions.
-			//IMGUI_API void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 1 byte per-pixel
+			private static extern bool BuildImpl(FontAtlas* self);                    // Build pixels data. This is called automatically for you by the GetTexData*** functions.
+			public bool                Build() mut { return BuildImpl(&this); }
+			[LinkName("ImFontAtlas_GetTexDataAsAlpha8")]
+			private static extern void GetTexDataAsAlpha8Impl(FontAtlas* self, uint8** out_pixels, int32* out_width, int32* out_height, int32* out_bytes_per_pixel);  // 1 byte per-pixel
+			public void                GetTexDataAsAlpha8(out uint8* out_pixels, out int32 out_width, out int32 out_height, int32* out_bytes_per_pixel = null) mut
+			{
+				out_pixels = ?; out_width = ?; out_height = ?;
+				GetTexDataAsAlpha8Impl(&this, &out_pixels, &out_width, &out_height, out_bytes_per_pixel);
+			}
 			[LinkName("ImFontAtlas_GetTexDataAsRGBA32")]
-			private static extern void  GetTexDataAsRGBA32Impl(FontAtlas* self, uint8** out_pixels, int32* out_width, int32* out_height, int32* out_bytes_per_pixel = null);  // 4 bytes-per-pixel
-			public void              	GetTexDataAsRGBA32(out uint8* out_pixels, out int32 out_width, out int32 out_height, int32* out_bytes_per_pixel = null) mut
+			private static extern void GetTexDataAsRGBA32Impl(FontAtlas* self, uint8** out_pixels, int32* out_width, int32* out_height, int32* out_bytes_per_pixel);  // 4 bytes-per-pixel
+			public void                GetTexDataAsRGBA32(out uint8* out_pixels, out int32 out_width, out int32 out_height, int32* out_bytes_per_pixel = null) mut
 			{
 				out_pixels = ?; out_width = ?; out_height = ?;
 				GetTexDataAsRGBA32Impl(&this, &out_pixels, &out_width, &out_height, out_bytes_per_pixel);
 			}
-			public bool                        IsBuilt()                   { return Fonts.Size > 0 && (TexPixelsAlpha8 != null || TexPixelsRGBA32 != null); }
-			public void                        SetTexID(TextureID id) mut  { TexID = id; }
+			public bool IsBuilt()                  { return Fonts.Size > 0 && (TexPixelsAlpha8 != null || TexPixelsRGBA32 != null); }
+			public void SetTexID(TextureID id) mut { TexID = id; }
 
 			//-------------------------------------------
 			// Glyph Ranges
@@ -742,14 +775,38 @@ namespace imgui_beef
 			// Helpers to retrieve list of common Unicode ranges (2 value per range, values are inclusive, zero-terminated list)
 			// NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
 			// NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
-			//IMGUI_API const ImWchar*    GetGlyphRangesDefault();                // Basic Latin, Extended Latin
-			//IMGUI_API const ImWchar*    GetGlyphRangesKorean();                 // Default + Korean characters
-			//IMGUI_API const ImWchar*    GetGlyphRangesJapanese();               // Default + Hiragana, Katakana, Half-Width, Selection of 1946 Ideographs
-			//IMGUI_API const ImWchar*    GetGlyphRangesChineseFull();            // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
-			//IMGUI_API const ImWchar*    GetGlyphRangesChineseSimplifiedCommon();// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
-			//IMGUI_API const ImWchar*    GetGlyphRangesCyrillic();               // Default + about 400 Cyrillic characters
-			//IMGUI_API const ImWchar*    GetGlyphRangesThai();                   // Default + Thai characters
-			//IMGUI_API const ImWchar*    GetGlyphRangesVietnamese();             // Default + Vietnamese characters
+			//IMGUI_API const ImWchar*    GetGlyphRangesDefault();
+			[LinkName("ImFontAtlas_GetGlyphRangesDefault")]         
+			private static extern ImWchar* GetGlyphRangesDefaultImpl(FontAtlas* self);                // Basic Latin, Extended Latin
+			public ImWchar*                GetGlyphRangesDefault() mut { return GetGlyphRangesDefaultImpl(&this); }
+			//IMGUI_API const ImWchar*    GetGlyphRangesKorean();
+			[LinkName("ImFontAtlas_GetGlyphRangesKorean")]         
+			private static extern ImWchar* GetGlyphRangesKoreanImpl(FontAtlas* self);                 // Default + Korean characters
+			public ImWchar*                GetGlyphRangesKorean() mut { return GetGlyphRangesKoreanImpl(&this); }
+			//IMGUI_API const ImWchar*    GetGlyphRangesJapanese();
+			[LinkName("ImFontAtlas_GetGlyphRangesJapanese")]         
+			private static extern ImWchar* GetGlyphRangesJapaneseImpl(FontAtlas* self);               // Default + Hiragana, Katakana, Half-Width, Selection of 1946 Ideographs
+			public ImWchar*                GetGlyphRangesJapanese() mut { return GetGlyphRangesJapaneseImpl(&this); }
+			//IMGUI_API const ImWchar*    GetGlyphRangesChineseFull();
+			[LinkName("ImFontAtlas_GetGlyphRangesChineseFull")]         
+			private static extern ImWchar* GetGlyphRangesChineseFullImpl(FontAtlas* self);            // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
+			public ImWchar*                GetGlyphRangesChineseFull() mut { return GetGlyphRangesChineseFullImpl(&this); }
+			//IMGUI_API const ImWchar*    GetGlyphRangesChineseSimplifiedCommon();
+			[LinkName("ImFontAtlas_GetGlyphRangesChineseSimplifiedCommon")]         
+			private static extern ImWchar* GetGlyphRangesChineseSimplifiedCommonImpl(FontAtlas* self);// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
+			public ImWchar*                GetGlyphRangesChineseSimplifiedCommon() mut { return GetGlyphRangesChineseSimplifiedCommonImpl(&this); }
+			//IMGUI_API const ImWchar*    GetGlyphRangesCyrillic();
+			[LinkName("ImFontAtlas_GetGlyphRangesCyrillic")]         
+			private static extern ImWchar* GetGlyphRangesCyrillicImpl(FontAtlas* self);               // Default + about 400 Cyrillic characters
+			public ImWchar*                GetGlyphRangesCyrillic() mut { return GetGlyphRangesCyrillicImpl(&this); }
+			//IMGUI_API const ImWchar*    GetGlyphRangesThai();
+			[LinkName("ImFontAtlas_GetGlyphRangesThai")]         
+			private static extern ImWchar* GetGlyphRangesThaiImpl(FontAtlas* self);                   // Default + Thai characters
+			public ImWchar*                GetGlyphRangesThai() mut { return GetGlyphRangesThaiImpl(&this); }
+			//IMGUI_API const ImWchar*    GetGlyphRangesVietnamese();
+			[LinkName("ImFontAtlas_GetGlyphRangesVietnamese")]         
+			private static extern ImWchar* GetGlyphRangesVietnameseImpl(FontAtlas* self);             // Default + Vietnamese characters
+			public ImWchar*                GetGlyphRangesVietnamese() mut { return GetGlyphRangesVietnameseImpl(&this); }
 
 			//-------------------------------------------
 			// [BETA] Custom Rectangles/Glyphs API
@@ -760,13 +817,23 @@ namespace imgui_beef
 			// You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
 			// so you can render e.g. custom colorful icons and use them as regular glyphs.
 			// Read docs/FONTS.txt for more details about using colorful icons.
-			//IMGUI_API int               AddCustomRectRegular(unsigned int id, int width, int height);                                                                   // Id needs to be >= 0x110000. Id >= 0x80000000 are reserved for ImGui and ImDrawList
-			//IMGUI_API int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const ImVec2& offset = ImVec2(0,0));   // Id needs to be < 0x110000 to register a rectangle to map into a specific font.
+			//IMGUI_API int               AddCustomRectRegular(unsigned int id, int width, int height);
+			[LinkName("ImFontAtlas_AddCustomRectRegular")]         
+			private static extern int32 AddCustomRectRegularImpl(FontAtlas* self, uint32 id, int32 width, int32 height);                                                 // Id needs to be >= 0x110000. Id >= 0x80000000 are reserved for ImGui and ImDrawList    
+			public int32                AddCustomRectRegular(uint32 id, int32 width, int32 height) mut { return AddCustomRectRegularImpl(&this, id, width, height); }
+			//IMGUI_API int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const ImVec2& offset = ImVec2(0,0));
+			[LinkName("ImFontAtlas_AddCustomRectFontGlyph")]         
+			private static extern int32 AddCustomRectFontGlyphImpl(FontAtlas* self, Font* font, ImWchar id, int32 width, int32 height, float advance_x, Vec2* offset);   // Id needs to be < 0x110000 to register a rectangle to map into a specific font.
+			public int32                AddCustomRectFontGlyph(Font* font, ImWchar id, int32 width, int32 height, float advance_x, Vec2* offset = default) mut { return AddCustomRectFontGlyphImpl(&this, font, id, width, height, advance_x, offset); }
 			public FontAtlasCustomRect* GetCustomRectByIndex(int index) { if (index < 0) return null; return &CustomRects.Data[index]; }
 
 			// [Internal]
-			//IMGUI_API void              CalcCustomRectUV(const ImFontAtlasCustomRect* rect, ImVec2* out_uv_min, ImVec2* out_uv_max) const;
-			//IMGUI_API bool              GetMouseCursorTexData(ImGuiMouseCursor cursor, ImVec2* out_offset, ImVec2* out_size, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2]);
+			[LinkName("ImFontAtlas_CalcCustomRectUV")]         
+			private static extern void CalcCustomRectUVImpl(FontAtlas* self, FontAtlasCustomRect* rect, Vec2* out_uv_min, Vec2* out_uv_max);
+			void                       CalcCustomRectUV(FontAtlasCustomRect* rect, Vec2* out_uv_min, Vec2* out_uv_max) mut { CalcCustomRectUVImpl(&this, rect, out_uv_min, out_uv_max); }
+			[LinkName("ImFontAtlas_GetMouseCursorTexData")]         
+			private static extern bool GetMouseCursorTexDataImpl(FontAtlas* self, MouseCursor cursor, Vec2* out_offset, Vec2* out_size, Vec2[2] out_uv_border, Vec2[2] out_uv_fill);
+			bool                       GetMouseCursorTexData(MouseCursor cursor, Vec2* out_offset, Vec2* out_size, Vec2[2] out_uv_border, Vec2[2] out_uv_fill) mut { return GetMouseCursorTexDataImpl(&this, cursor, out_offset, out_size, out_uv_border, out_uv_fill); }
 
 			//-------------------------------------------
 			// Members
@@ -780,16 +847,16 @@ namespace imgui_beef
 
 			// [Internal]
 			// NB: Access texture data via GetTexData*() calls! Which will setup a default font for you.
-			public uint8*                      TexPixelsAlpha8;    // 1 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight
-			public uint32*                     TexPixelsRGBA32;    // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
-			public int32                       TexWidth;           // Texture width calculated during Build().
-			public int32                       TexHeight;          // Texture height calculated during Build().
-			public Vec2                        TexUvScale;         // = (1.0f/TexWidth, 1.0f/TexHeight)
-			public Vec2                        TexUvWhitePixel;    // Texture coordinates to a white pixel
-			public ImVector<Font*>             Fonts;              // Hold all the fonts returned by AddFont*. Fonts[0] is the default font upon calling ImGui::NewFrame(), use ImGui::PushFont()/PopFont() to change the current font.
-			public ImVector<FontAtlasCustomRect> CustomRects;      // Rectangles for packing custom texture data into the atlas.
-			public ImVector<FontConfig>        ConfigData;         // Internal data
-			public int32[1]                    CustomRectIds;      // Identifiers of custom texture rectangle used by ImFontAtlas/ImDrawList
+			public uint8*                        TexPixelsAlpha8;    // 1 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight
+			public uint32*                       TexPixelsRGBA32;    // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
+			public int32                         TexWidth;           // Texture width calculated during Build().
+			public int32                         TexHeight;          // Texture height calculated during Build().
+			public Vec2                          TexUvScale;         // = (1.0f/TexWidth, 1.0f/TexHeight)
+			public Vec2                          TexUvWhitePixel;    // Texture coordinates to a white pixel
+			public ImVector<Font*>               Fonts;              // Hold all the fonts returned by AddFont*. Fonts[0] is the default font upon calling ImGui::NewFrame(), use ImGui::PushFont()/PopFont() to change the current font.
+			public ImVector<FontAtlasCustomRect> CustomRects;        // Rectangles for packing custom texture data into the atlas.
+			public ImVector<FontConfig>          ConfigData;         // Internal data
+			public int32[1]                      CustomRectIds;      // Identifiers of custom texture rectangle used by ImFontAtlas/ImDrawList
 		};
 
 		// Font runtime data and rendering
@@ -821,30 +888,71 @@ namespace imgui_beef
 			public uint8[(UNICODE_CODEPOINT_MAX+1)/4096/8] Used4kPagesMap; // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K codepoints that has one active glyph. This is mainly used to facilitate iterations accross all used codepoints.
 
 			// Methods
-			//IMGUI_API ImFont();
-			//IMGUI_API ~ImFont();
-			//IMGUI_API const ImFontGlyph*FindGlyph(ImWchar c) const;
-			//IMGUI_API const ImFontGlyph*FindGlyphNoFallback(ImWchar c) const;
-			//float                       GetCharAdvance(ImWchar c) const     { return ((int)c < IndexAdvanceX.Size) ? IndexAdvanceX[(int)c] : FallbackAdvanceX; }
-			//bool                        IsLoaded() const                    { return ContainerAtlas != NULL; }
-			//const char*                 GetDebugName() const                { return ConfigData ? ConfigData->Name : "<unknown>"; }
+			[LinkName("ImFont_ImFont")]
+			private static extern Font* ImFontImpl();
+			public Font*                ImFont() mut { return ImFontImpl(); }
+			[LinkName("ImFont_destroy")]
+			private static extern void DestroyImpl(Font* self);
+			public void                Destroy() mut { DestroyImpl(&this); }
+
+			[LinkName("ImFont_FindGlyph")]         
+			private static extern FontGlyph* FindGlyphImpl(Font* self, ImWchar c);
+			public FontGlyph*                FindGlyph(ImWchar c) mut { return FindGlyphImpl(&this, c); }
+			[LinkName("ImFont_FindGlyphNoFallback")]         
+			private static extern FontGlyph* FindGlyphNoFallbackImpl(Font* self, ImWchar c);
+			public FontGlyph*                FindGlyphNoFallback(ImWchar c) mut { return FindGlyphNoFallbackImpl(&this, c); }
+			public float GetCharAdvance(ImWchar c) { return ((int32)c < IndexAdvanceX.Size) ? IndexAdvanceX.Data[(int)c] : FallbackAdvanceX; }
+			public bool IsLoaded() { return ContainerAtlas != null; }
+			public void GetDebugName(String outString)
+			{
+				outString.Clear();
+
+				if (ConfigData != null)
+					outString.Append(&ConfigData.[Friend]Name);
+				else
+					outString.Append("<unknown>");
+			}
 
 			// 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
 			// 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
-			//IMGUI_API ImVec2            CalcTextSizeA(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-			//IMGUI_API const char*       CalcWordWrapPositionA(float scale, const char* text, const char* text_end, float wrap_width) const;
-			//IMGUI_API void              RenderChar(ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, ImWchar c) const;
-			//IMGUI_API void              RenderText(ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
+			[LinkName("ImFont_CalcTextSizeA")]
+			private static extern Vec2 CalcTextSizeAImpl(Font* self, float size, float max_width, float wrap_width, char8* text_begin, char8* text_end, char8** remaining); // utf8
+			public Vec2                CalcTextSizeA(float size, float max_width, float wrap_width, char8* text_begin, char8* text_end = null, char8** remaining = null) mut { return CalcTextSizeAImpl(&this, size, max_width, wrap_width, text_begin, text_end, remaining); }
+			[LinkName("ImFont_CalcWordWrapPositionA")]
+			private static extern char8* CalcWordWrapPositionAImpl(Font* self, float scale, char8* text, char8* text_end, float wrap_width);
+			public char8*                CalcWordWrapPositionA(float scale, char8* text, char8* text_end, float wrap_width) mut { return CalcWordWrapPositionAImpl(&this, scale, text, text_end, wrap_width); }
+			[LinkName("ImFont_RenderChar")]
+			private static extern void RenderCharImpl(Font* self, DrawList* draw_list, float size, Vec2 pos, uint32 col, ImWchar c);
+			public void                RenderChar(DrawList* draw_list, float size, Vec2 pos, uint32 col, ImWchar c) mut { RenderCharImpl(&this, draw_list, size, pos, col, c); }
+			[LinkName("ImFont_RenderText")]
+			private static extern void RenderTextImpl(Font* self, DrawList* draw_list, float size, Vec2 pos, uint32 col, Vec4* clip_rect, char8* text_begin, char8* text_end, float wrap_width, bool cpu_fine_clip);
+			public void                RenderText(DrawList* draw_list, float size, Vec2 pos, uint32 col, Vec4* clip_rect, char8* text_begin, char8* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) mut { RenderTextImpl(&this, draw_list, size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip); }
 
 			// [Internal] Don't use!
-			//IMGUI_API void              BuildLookupTable();
-			//IMGUI_API void              ClearOutputData();
-			//IMGUI_API void              GrowIndex(int new_size);
-			//IMGUI_API void              AddGlyph(ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
-			//IMGUI_API void              AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
-			//IMGUI_API void              SetGlyphVisible(ImWchar c, bool visible);
-			//IMGUI_API void              SetFallbackChar(ImWchar c);
-			//IMGUI_API bool              IsGlyphRangeUnused(unsigned int c_begin, unsigned int c_last);
+			[LinkName("ImFont_BuildLookupTable")]
+			private static extern void BuildLookupTableImpl(Font* self);
+			void                       BuildLookupTable() mut { BuildLookupTableImpl(&this); }
+			[LinkName("ImFont_ClearOutputData")]
+			private static extern void ClearOutputDataImpl(Font* self);
+			void                       ClearOutputData() mut { ClearOutputDataImpl(&this); }
+			[LinkName("ImFont_GrowIndex")]
+			private static extern void GrowIndexImpl(Font* self, int32 new_size);
+			void                       GrowIndex(int32 new_size) mut { GrowIndexImpl(&this, new_size); }
+			[LinkName("ImFont_AddGlyph")]
+			private static extern void AddGlyphImpl(Font* self, ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
+			void                       AddGlyph(ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x) mut { AddGlyphImpl(&this, c, x0, y0, x1, y1, u0, v0, u1, v1, advance_x); }
+			[LinkName("ImFont_AddRemapChar")]
+			private static extern void AddRemapCharImpl(Font* self, ImWchar dst, ImWchar src, bool overwrite_dst); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+			void                       AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst = true) mut { AddRemapCharImpl(&this, dst, src, overwrite_dst); }
+			[LinkName("ImFont_SetGlyphVisible")]
+			private static extern void SetGlyphVisibleImpl(Font* self, ImWchar c, bool visible);
+			void                       SetGlyphVisible(ImWchar c, bool visible) mut { SetGlyphVisibleImpl(&this, c, visible); }
+			[LinkName("ImFont_SetFallbackChar")]
+			private static extern void SetFallbackCharImpl(Font* self, ImWchar c);
+			void                       SetFallbackChar(ImWchar c) mut { SetFallbackCharImpl(&this, c); }
+			[LinkName("ImFont_IsGlyphRangeUnused")]
+			private static extern bool IsGlyphRangeUnusedImpl(Font* self, uint32 c_begin, uint32 c_last);
+			bool                       IsGlyphRangeUnused(uint32 c_begin, uint32 c_last) mut { return IsGlyphRangeUnusedImpl(&this, c_begin, c_last); }
 		};
 	}
 }
