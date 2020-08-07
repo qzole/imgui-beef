@@ -87,7 +87,7 @@ namespace imgui_beef {
 		private static uint         g_VboHandle = 0;
 		private static uint         g_ElementsHandle = 0;
 							    
-		public static bool ImGui_ImplOpenGL3_Init(ImGuiImplOpengl3GL.GetProcAddressFunc getProcAddress, StringView glsl_version_ = default) {
+		public static bool Init(ImGuiImplOpengl3GL.GetProcAddressFunc getProcAddress, StringView glsl_version_ = default) {
 			StringView glsl_version = glsl_version_;
 
 			ImGuiImplOpengl3GL.Init(getProcAddress);
@@ -130,16 +130,16 @@ namespace imgui_beef {
 			return true;
 		}
 
-		public static void ImGui_ImplOpenGL3_Shutdown() {
-			ImGui_ImplOpenGL3_DestroyDeviceObjects();
+		public static void Shutdown() {
+			DestroyDeviceObjects();
 			delete g_GlslVersionString;
 		}
 
-		public static void ImGui_ImplOpenGL3_NewFrame() {
-			if (g_ShaderHandle == 0) ImGui_ImplOpenGL3_CreateDeviceObjects();
+		public static void NewFrame() {
+			if (g_ShaderHandle == 0) CreateDeviceObjects();
 		}
 
-		private static void ImGui_ImplOpenGL3_SetupRenderState(ImGui.DrawData* draw_data, int fb_width, int fb_height, uint vertex_array_object) {
+		private static void SetupRenderState(ImGui.DrawData* draw_data, int fb_width, int fb_height, uint vertex_array_object) {
 		    // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, polygon fill
 		    GL.glEnable(GL.GL_BLEND);
 		    GL.glBlendEquation(GL.GL_FUNC_ADD);
@@ -204,7 +204,7 @@ namespace imgui_beef {
 		    GL.glVertexAttribPointer((.) g_AttribLocationVtxColor, 4, GL.GL_UNSIGNED_BYTE, GL.GL_TRUE,  sizeof(ImGui.DrawVert), (void*) stride);
 		}
 
-		public static void ImGui_ImplOpenGL3_RenderDrawData(ImGui.DrawData* draw_data) {
+		public static void RenderDrawData(ImGui.DrawData* draw_data) {
 			// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 			int fb_width = (int)(draw_data.DisplaySize.x * draw_data.FramebufferScale.x);
 			int fb_height = (int)(draw_data.DisplaySize.y * draw_data.FramebufferScale.y);
@@ -246,7 +246,7 @@ namespace imgui_beef {
 #if IMGUI_IMPL_OPENGL_ES2
 			GL.glGenVertexArrays(1, &vertex_array_object);
 #endif
-			ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
+			SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
 
 			// Will project scissor/clipping rectangles into framebuffer space
 			ImGui.Vec2 clip_off = draw_data.DisplayPos;         // (0,0) unless using multi-viewports
@@ -266,7 +266,7 @@ namespace imgui_beef {
 			            // User callback, registered via ImDrawList::AddCallback()
 			            // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
 			            if (&pcmd.UserCallback == ImGui.DrawCallback_ResetRenderState)
-			                ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
+			                SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
 			            else
 			                pcmd.UserCallback(cmd_list, pcmd);
 			        } else {
@@ -328,7 +328,7 @@ namespace imgui_beef {
 			GL.glScissor(last_scissor_box[0], last_scissor_box[1], (int) last_scissor_box[2], (int) last_scissor_box[3]);
 		}
 
-		public static bool ImGui_ImplOpenGL3_CreateFontsTexture() {
+		public static bool CreateFontsTexture() {
 			// Build texture atlas
 			ref ImGui.IO io = ref ImGui.GetIO();
 			uint8* pixels;
@@ -356,7 +356,7 @@ namespace imgui_beef {
 			return true;
 		}
 
-		public static void ImGui_ImplOpenGL3_DestroyFontsTexture() {
+		public static void DestroyFontsTexture() {
 			if (g_FontTexture != 0) {
 			    ref ImGui.IO io = ref ImGui.GetIO();
 			    GL.glDeleteTextures(1, &g_FontTexture);
@@ -370,7 +370,7 @@ namespace imgui_beef {
 		    int status = 0, log_length = 0;
 		    GL.glGetShaderiv(handle, GL.GL_COMPILE_STATUS, &status);
 		    GL.glGetShaderiv(handle, GL.GL_INFO_LOG_LENGTH, &log_length);
-		    if (status == GL.GL_FALSE) Console.Error.WriteLine("ERROR: ImGui_ImplOpenGL3_CreateDeviceObjects: failed to compile {}!", desc);
+		    if (status == GL.GL_FALSE) Console.Error.WriteLine("ERROR: CreateDeviceObjects: failed to compile {}!", desc);
 		    if (log_length > 1) {
 				char8* msg = new char8[log_length]*;
 				GL.glGetShaderInfoLog(handle, log_length, null, msg);
@@ -385,7 +385,7 @@ namespace imgui_beef {
 		    int status = 0, log_length = 0;
 		    GL.glGetProgramiv(handle, GL.GL_LINK_STATUS, &status);
 		    GL.glGetProgramiv(handle, GL.GL_INFO_LOG_LENGTH, &log_length);
-		    if (status == GL.GL_FALSE) Console.Error.WriteLine("ERROR: ImGui_ImplOpenGL3_CreateDeviceObjects: failed to link {}! (with GLSL '{}')", desc, g_GlslVersionString);
+		    if (status == GL.GL_FALSE) Console.Error.WriteLine("ERROR: CreateDeviceObjects: failed to link {}! (with GLSL '{}')", desc, g_GlslVersionString);
 		    if (log_length > 1) {
 				char8* msg = new char8[log_length]*;
 				GL.glGetProgramInfoLog(handle, log_length, null, msg);
@@ -395,7 +395,7 @@ namespace imgui_beef {
 		    return status == GL.GL_TRUE;
 		}
 
-		public static bool ImGui_ImplOpenGL3_CreateDeviceObjects() {
+		public static bool CreateDeviceObjects() {
 			// Backup GL state
 			int last_texture = 0, last_array_buffer = 0;
 			GL.glGetIntegerv(GL.GL_TEXTURE_BINDING_2D, &last_texture);
@@ -580,7 +580,7 @@ namespace imgui_beef {
 			GL.glGenBuffers(1, &g_VboHandle);
 			GL.glGenBuffers(1, &g_ElementsHandle);
 
-			ImGui_ImplOpenGL3_CreateFontsTexture();
+			CreateFontsTexture();
 
 			// Restore modified GL state
 			GL.glBindTexture(GL.GL_TEXTURE_2D, (.) last_texture);
@@ -592,7 +592,7 @@ namespace imgui_beef {
 			return true;
 		}
 
-		public static void ImGui_ImplOpenGL3_DestroyDeviceObjects() {
+		public static void DestroyDeviceObjects() {
 			if (g_VboHandle != 0)        { GL.glDeleteBuffers(1, &g_VboHandle); g_VboHandle = 0; }
 			if (g_ElementsHandle != 0)   { GL.glDeleteBuffers(1, &g_ElementsHandle); g_ElementsHandle = 0; }
 			if (g_ShaderHandle != 0 && g_VertHandle != 0) { GL.glDetachShader(g_ShaderHandle, g_VertHandle); }
@@ -601,7 +601,7 @@ namespace imgui_beef {
 			if (g_FragHandle != 0)       { GL.glDeleteShader(g_FragHandle); g_FragHandle = 0; }
 			if (g_ShaderHandle != 0)     { GL.glDeleteProgram(g_ShaderHandle); g_ShaderHandle = 0; }
 
-			ImGui_ImplOpenGL3_DestroyFontsTexture();
+			DestroyFontsTexture();
 		}
 	}
 }
