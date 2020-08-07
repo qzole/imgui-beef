@@ -66,7 +66,51 @@ namespace imgui_beef
 			public int32 Capacity;
 			public T* Data;
 
-			// No implementation for this struct, only the size matters, we don't directly manipulate these types of vectors from Beef side.
+			// Partial implementation for this struct, in case we need to manipulate these types of vectors in some capacity from Beef side.
+			// Constructors, destructor
+			public this()                                             { Size = Capacity = 0; Data = null; }
+			public this(ref ImVector<T> src)                          { Size = Capacity = 0; Data = null; resize(src.Size); Internal.MemCpy(Data, src.Data, Size * sizeof(T)); }
+			//inline ImVector<T>& operator=(const ImVector<T>& src)   { clear(); resize(src.Size); memcpy(Data, src.Data, (size_t)Size * sizeof(T)); return *this; }
+			//public ~this()                                          { if (Data) IM_FREE(Data); }
+
+			public bool           empty() { return Size == 0; }
+			public int            size() { return Size; }
+			public int            size_in_bytes()                     { return Size * (int)sizeof(T); }
+			public int            capacity()                          { return Capacity; }
+			//inline T&           operator[](int i)                   { IM_ASSERT(i < Size); return Data[i]; }
+			//inline const T&     operator[](int i) const             { IM_ASSERT(i < Size); return Data[i]; }
+
+			public void           clear() mut                         { if (Data != null) { Size = Capacity = 0; ImGui.MemFree(Data); Data = null; } }
+			public T*             begin()                             { return Data; }
+			//inline const T*     begin() const                       { return Data; }
+			public T*             end()                               { return Data + Size; }
+			//inline const T*     end() const                         { return Data + Size; }
+			public ref T          front()                             { ImGui.ASSERT!(Size > 0); return ref Data[0]; }
+			//inline const T&     front() const                       { IM_ASSERT(Size > 0); return Data[0]; }
+			public ref T          back()                              { ImGui.ASSERT!(Size > 0); return ref Data[Size - 1]; }
+			//inline const T&     back() const                        { IM_ASSERT(Size > 0); return Data[Size - 1]; }
+			public void           swap(ref ImVector<T> rhs) mut       { int32 rhs_size = rhs.Size; rhs.Size = Size; Size = rhs_size; int32 rhs_cap = rhs.Capacity; rhs.Capacity = Capacity; Capacity = rhs_cap; T* rhs_data = rhs.Data; rhs.Data = Data; Data = rhs_data; }
+
+			public int32          _grow_capacity(int32 sz)            { int32 new_capacity = Capacity > 0 ? (Capacity + Capacity/2) : 8; return new_capacity > sz ? new_capacity : sz; }
+			public void           resize(int32 new_size) mut          { if (new_size > Capacity) reserve(_grow_capacity(new_size)); Size = new_size; }
+			public void           resize(int32 new_size, ref T v) mut { if (new_size > Capacity) reserve(_grow_capacity(new_size)); if (new_size > Size) for (int n = Size; n < new_size; n++) Internal.MemCpy(&Data[n], &v, sizeof(T)); Size = new_size; }
+			public void           shrink(int32 new_size) mut          { ImGui.ASSERT!(new_size <= Size); Size = new_size; } // Resize a vector to a smaller size, guaranteed not to cause a reallocation
+			public void           reserve(int32 new_capacity) mut     { if (new_capacity <= Capacity) return; T* new_data = (T*)ImGui.MemAlloc((.)(new_capacity * sizeof(T))); if (Data != null) { Internal.MemCpy(new_data, Data, (.)(Size * sizeof(T))); ImGui.MemFree(Data); } Data = new_data; Capacity = new_capacity; }
+
+			// NB: It is illegal to call push_back/push_front/insert with a reference pointing inside the ImVector data itself! e.g. v.push_back(v[10]) is forbidden.
+			public void           push_back(ref T v) mut              { if (Size == Capacity) reserve(_grow_capacity(Size + 1)); Internal.MemCpy(&Data[Size], &v, sizeof(T)); Size++; }
+			public void           pop_back() mut                      { ImGui.ASSERT!(Size > 0); Size--; }
+			public void           push_front(ref T v) mut             { if (Size == 0) push_back(ref v); else insert(Data, ref v); }
+			public T*             erase(T* it) mut                    { ImGui.ASSERT!(it >= Data && it < Data+Size); readonly int off = it - Data; Internal.MemMove(Data + off, Data + off + 1, (Size - off - 1) * sizeof(T)); Size--; return Data + off; }
+			public T*             erase(T* it, T* it_last) mut        { ImGui.ASSERT!(it >= Data && it < Data+Size && it_last > it && it_last <= Data+Size); readonly int count = it_last - it; readonly int off = it - Data; Internal.MemMove(Data + off, Data + off + count, (Size - off - count) * sizeof(T)); Size -= (.)count; return Data + off; }
+			public T*             erase_unsorted(T* it) mut           { ImGui.ASSERT!(it >= Data && it < Data+Size);  readonly int off = it - Data; if (it < Data+Size-1) Internal.MemCpy(Data + off, Data + Size - 1, sizeof(T)); Size--; return Data + off; }
+			public T*             insert(T* it, ref T v) mut          { ImGui.ASSERT!(it >= Data && it <= Data+Size); readonly int off = it - Data; if (Size == Capacity) reserve(_grow_capacity(Size + 1)); if (off < (int)Size) Internal.MemMove(Data + off + 1, Data + off, (Size - off) * sizeof(T)); Internal.MemCpy(&Data[off], &v, sizeof(T)); Size++; return Data + off; }
+			public bool           contains(T v)                       { T* data = Data; readonly T* data_end = Data + Size; while (data < data_end) if (*data++ == v) return true; return false; }
+			public T*             find(T v)                           { T* data = Data; readonly T* data_end = Data + Size; while (data < data_end) if (*data == v) break; else ++data; return data; }
+			//inline const T*     find(const T& v) const              { const T* data = Data;  const T* data_end = Data + Size; while (data < data_end) if (*data == v) break; else ++data; return data; }
+			public bool           find_erase(T v) mut                 { T* it = find(v); if (it < Data + Size) { erase(it); return true; } return false; }
+			public bool           find_erase_unsorted(T v) mut        { T* it = find(v); if (it < Data + Size) { erase_unsorted(it); return true; } return false; }
+			public int32          index_from_ptr(T* it)               { ImGui.ASSERT!(it >= Data && it < Data + Size); readonly int off = it - Data; return (.)off; }
 		}
 
 		//-----------------------------------------------------------------------------
@@ -447,17 +491,25 @@ namespace imgui_beef
 		[CRepr]
 		public struct DrawListSplitter
 		{
-			public int                         _Current;    // Current channel number (0)
-			public int                         _Count;      // Number of active channels (1+)
+			public int32                       _Current;    // Current channel number (0)
+			public int32                       _Count;      // Number of active channels (1+)
 			public ImVector<DrawChannel>       _Channels;   // Draw channels (not resized down so _Count might be < Channels.Size)
 
-			//inline DrawListSplitter()  { Clear(); }
+			public this()  { _Current = 0; _Count = 1; _Channels = default; }
 			//inline ~ImDrawListSplitter() { ClearFreeMemory(); }
-			//inline void                 Clear() { _Current = 0; _Count = 1; } // Do not clear Channels[] so our allocations are reused next frame
-			//IMGUI_API void              ClearFreeMemory();
-			//IMGUI_API void              Split(ImDrawList* draw_list, int count);
-			//IMGUI_API void              Merge(ImDrawList* draw_list);
-			//IMGUI_API void              SetCurrentChannel(ImDrawList* draw_list, int channel_idx);
+			public void                Clear() mut { _Current = 0; _Count = 1; } // Do not clear Channels[] so our allocations are reused next frame
+			[LinkName("ImDrawListSplitter_ClearFreeMemory")]
+			private static extern void ImDrawListSplitter_ClearFreeMemory(DrawListSplitter* self);
+			public void                ClearFreeMemory() mut { ImDrawListSplitter_ClearFreeMemory(&this); }
+			[LinkName("ImDrawListSplitter_Split")]
+			private static extern void ImDrawListSplitter_Split(DrawListSplitter* self, DrawList* draw_list, int32 count);
+			public void                Split(DrawList* draw_list, int32 count) mut { ImDrawListSplitter_Split(&this, draw_list, count); }
+			[LinkName("ImDrawListSplitter_Merge")]
+			private static extern void ImDrawListSplitter_Merge(DrawListSplitter* self, DrawList* draw_list);
+			public void                Merge(DrawList* draw_list) mut { ImDrawListSplitter_Merge(&this, draw_list); };
+			[LinkName("ImDrawListSplitter_SetCurrentChannel")]
+			private static extern void ImDrawListSplitter_SetCurrentChannel(DrawListSplitter* self, DrawList* draw_list, int32 channel_idx);
+			public void                SetCurrentChannel(DrawList* draw_list, int32 channel_idx) mut { ImDrawListSplitter_SetCurrentChannel(&this, draw_list, channel_idx); };
 		};
 
 		// Draw command list
@@ -492,60 +544,124 @@ namespace imgui_beef
 			// If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
 			//ImDrawList(const ImDrawListSharedData* shared_data) { _Data = shared_data; _OwnerName = NULL; Clear(); }
 			//~ImDrawList() { ClearFreeMemory(); }
-			//IMGUI_API void  PushClipRect(ImVec2 clip_rect_min, ImVec2 clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
-			//IMGUI_API void  PushClipRectFullScreen();
-			//IMGUI_API void  PopClipRect();
-			//IMGUI_API void  PushTextureID(ImTextureID texture_id);
-			//IMGUI_API void  PopTextureID();
-			//inline ImVec2   GetClipRectMin() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.x, cr.y); }
-			//inline ImVec2   GetClipRectMax() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.z, cr.w); }
+			[LinkName("ImDrawList_PushClipRect")]
+			private static extern void ImDrawList_PushClipRect(DrawList* self,Vec2 clip_rect_min,Vec2 clip_rect_max,bool intersect_with_current_clip_rect);
+			public void PushClipRect(Vec2 clip_rect_min, Vec2 clip_rect_max, bool intersect_with_current_clip_rect = false) mut { ImDrawList_PushClipRect(&this, clip_rect_min, clip_rect_max, intersect_with_current_clip_rect); };  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
+			[LinkName("ImDrawList_PushClipRectFullScreen")]
+			private static extern void ImDrawList_PushClipRectFullScreen(DrawList* self);
+			public void PushClipRectFullScreen() mut { ImDrawList_PushClipRectFullScreen(&this); };
+			[LinkName("ImDrawList_PopClipRect")]
+			private static extern void ImDrawList_PopClipRect(DrawList* self);
+			public void PopClipRect() mut { ImDrawList_PopClipRect(&this); };
+			[LinkName("ImDrawList_PushTextureID")]
+			private static extern void ImDrawList_PushTextureID(DrawList* self,TextureID texture_id);
+			public void PushTextureID(TextureID texture_id) mut { ImDrawList_PushTextureID(&this, texture_id); };
+			[LinkName("ImDrawList_PopTextureID")]
+			private static extern void ImDrawList_PopTextureID(DrawList* self);
+			public void PopTextureID() mut { ImDrawList_PopTextureID(&this); };
+			public Vec2   GetClipRectMin() { readonly ref Vec4 cr = ref _ClipRectStack.back(); return Vec2(cr.x, cr.y); }
+			public Vec2   GetClipRectMax() { readonly ref Vec4 cr = ref _ClipRectStack.back(); return Vec2(cr.z, cr.w); }
 
 			// Primitives
 			// - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
 			// - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
 			//   In future versions we will use textures to provide cheaper and higher-quality circles.
 			//   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
-			//IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
-			//IMGUI_API void  AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All, float thickness = 1.0f);   // a: upper-left, b: lower-right (== upper-left + size), rounding_corners_flags: 4 bits corresponding to which corner to round
-			//IMGUI_API void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All);                     // a: upper-left, b: lower-right (== upper-left + size)
-			//IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
-			//IMGUI_API void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 1.0f);
-			//IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);
-			//IMGUI_API void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness = 1.0f);
-			//IMGUI_API void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col);
-			//IMGUI_API void  AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments = 12, float thickness = 1.0f);
-			//IMGUI_API void  AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments = 12);
-			//IMGUI_API void  AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness = 1.0f);
-			//IMGUI_API void  AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments);
-			//IMGUI_API void  AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
-			//IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL);
-			//IMGUI_API void  AddPolyline(const ImVec2* points, int num_points, ImU32 col, bool closed, float thickness);
-			//IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col); // Note: Anti-aliased filling requires points to be in clockwise order.
-			//IMGUI_API void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0);
+			[LinkName("ImDrawList_AddLine")]
+			private static extern void ImDrawList_AddLine(DrawList* self,Vec2 p1,Vec2 p2,uint32 col,float thickness);
+			public void AddLine(Vec2 p1, Vec2 p2, uint32 col, float thickness = 1.0f) mut { ImDrawList_AddLine(&this, p1, p2, col, thickness); };
+			[LinkName("ImDrawList_AddRect")]
+			private static extern void ImDrawList_AddRect(DrawList* self,Vec2 p_min,Vec2 p_max,uint32 col,float rounding,DrawCornerFlags rounding_corners,float thickness);
+			public void AddRect(Vec2 p_min, Vec2 p_max, uint32 col, float rounding = 0.0f, DrawCornerFlags rounding_corners = .ImDrawCornerFlags_All, float thickness = 1.0f) mut { ImDrawList_AddRect(&this, p_min, p_max, col, rounding, rounding_corners, thickness); };   // a: upper-left, b: lower-right (== upper-left + size), rounding_corners_flags: 4 bits corresponding to which corner to round
+			[LinkName("ImDrawList_AddRectFilled")]
+			private static extern void ImDrawList_AddRectFilled(DrawList* self,Vec2 p_min,Vec2 p_max,uint32 col,float rounding,DrawCornerFlags rounding_corners);
+			public void AddRectFilled(Vec2 p_min, Vec2 p_max, uint32 col, float rounding = 0.0f, DrawCornerFlags rounding_corners = .ImDrawCornerFlags_All) mut { ImDrawList_AddRectFilled(&this, p_min, p_max, col, rounding, rounding_corners); };                     // a: upper-left, b: lower-right (== upper-left + size)
+			[LinkName("ImDrawList_AddRectFilledMultiColor")]
+			private static extern void ImDrawList_AddRectFilledMultiColor(DrawList* self,Vec2 p_min,Vec2 p_max,uint32 col_upr_left,uint32 col_upr_right,uint32 col_bot_right,uint32 col_bot_left);
+			public void AddRectFilledMultiColor(Vec2 p_min, Vec2 p_max, uint32 col_upr_left, uint32 col_upr_right, uint32 col_bot_right, uint32 col_bot_left) mut { ImDrawList_AddRectFilledMultiColor(&this, p_min, p_max, col_upr_left, col_upr_right, col_bot_right, col_bot_left); };
+			[LinkName("ImDrawList_AddQuad")]
+			private static extern void ImDrawList_AddQuad(DrawList* self,Vec2 p1,Vec2 p2,Vec2 p3,Vec2 p4,uint32 col,float thickness);
+			public void AddQuad(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, uint32 col, float thickness = 1.0f) mut { ImDrawList_AddQuad(&this, p1, p2, p3, p4, col, thickness); };
+			[LinkName("ImDrawList_AddQuadFilled")]
+			private static extern void ImDrawList_AddQuadFilled(DrawList* self,Vec2 p1,Vec2 p2,Vec2 p3,Vec2 p4,uint32 col);
+			public void AddQuadFilled(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, uint32 col) mut { ImDrawList_AddQuadFilled(&this, p1, p2, p3, p4, col); };
+			[LinkName("ImDrawList_AddTriangle")]
+			private static extern void ImDrawList_AddTriangle(DrawList* self,Vec2 p1,Vec2 p2,Vec2 p3,uint32 col,float thickness);
+			public void AddTriangle(Vec2 p1, Vec2 p2, Vec2 p3, uint32 col, float thickness = 1.0f) mut { ImDrawList_AddTriangle(&this, p1, p2, p3, col, thickness); };
+			[LinkName("ImDrawList_AddTriangleFilled")]
+			private static extern void ImDrawList_AddTriangleFilled(DrawList* self,Vec2 p1,Vec2 p2,Vec2 p3,uint32 col);
+			public void AddTriangleFilled(Vec2 p1, Vec2 p2, Vec2 p3, uint32 col) mut { ImDrawList_AddTriangleFilled(&this, p1, p2, p3, col); };
+			[LinkName("ImDrawList_AddCircle")]
+			private static extern void ImDrawList_AddCircle(DrawList* self,Vec2 center,float radius,uint32 col,int num_segments,float thickness);
+			public void AddCircle(Vec2 center, float radius, uint32 col, int num_segments = 12, float thickness = 1.0f) mut { ImDrawList_AddCircle(&this, center, radius, col, num_segments, thickness); };
+			[LinkName("ImDrawList_AddCircleFilled")]
+			private static extern void ImDrawList_AddCircleFilled(DrawList* self,Vec2 center,float radius,uint32 col,int num_segments);
+			public void AddCircleFilled(Vec2 center, float radius, uint32 col, int num_segments = 12) mut { ImDrawList_AddCircleFilled(&this, center, radius, col, num_segments); };
+			[LinkName("ImDrawList_AddNgon")]
+			private static extern void ImDrawList_AddNgon(DrawList* self,Vec2 center,float radius,uint32 col,int num_segments,float thickness);
+			public void AddNgon(Vec2 center, float radius, uint32 col, int num_segments, float thickness = 1.0f) mut { ImDrawList_AddNgon(&this, center, radius, col, num_segments, thickness); };
+			[LinkName("ImDrawList_AddNgonFilled")]
+			private static extern void ImDrawList_AddNgonFilled(DrawList* self,Vec2 center,float radius,uint32 col,int num_segments);
+			public void AddNgonFilled(Vec2 center, float radius, uint32 col, int num_segments) mut { ImDrawList_AddNgonFilled(&this, center, radius, col, num_segments); };
+			[LinkName("ImDrawList_AddTextVec2")]
+			private static extern void ImDrawList_AddTextVec2(DrawList* self,Vec2 pos,uint32 col,char8* text_begin,char8* text_end);
+			public void AddText(Vec2 pos, uint32 col, char8* text_begin, char8* text_end = null) mut { ImDrawList_AddTextVec2(&this, pos, col, text_begin, text_end); };
+			[LinkName("ImDrawList_AddTextFontPtr")]
+			private static extern void ImDrawList_AddTextFontPtr(DrawList* self,Font* font,float font_size,Vec2 pos,uint32 col,char8* text_begin,char8* text_end,float wrap_width,Vec4* cpu_fine_clip_rect);
+			public void AddText(Font* font, float font_size, Vec2 pos, uint32 col, char8* text_begin, char8* text_end = null, float wrap_width = 0.0f, Vec4* cpu_fine_clip_rect = null) mut { ImDrawList_AddTextFontPtr(&this, font, font_size, pos, col, text_begin, text_end, wrap_width, cpu_fine_clip_rect); };
+			[LinkName("ImDrawList_AddPolyline")]
+			private static extern void ImDrawList_AddPolyline(DrawList* self,Vec2* points,int num_points,uint32 col,bool closed,float thickness);
+			public void AddPolyline(Vec2* points, int num_points, uint32 col, bool closed, float thickness) mut { ImDrawList_AddPolyline(&this, points, num_points, col, closed, thickness); };
+			[LinkName("ImDrawList_AddConvexPolyFilled")]
+			private static extern void ImDrawList_AddConvexPolyFilled(DrawList* self,Vec2* points,int num_points,uint32 col);
+			public void AddConvexPolyFilled(Vec2* points, int num_points, uint32 col) mut { ImDrawList_AddConvexPolyFilled(&this, points, num_points, col); }; // Note: Anti-aliased filling requires points to be in clockwise order.
+			[LinkName("ImDrawList_AddBezierCurve")]
+			private static extern void ImDrawList_AddBezierCurve(DrawList* self,Vec2 p1,Vec2 p2,Vec2 p3,Vec2 p4,uint32 col,float thickness,int num_segments);
+			public void AddBezierCurve(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, uint32 col, float thickness, int num_segments = 0) mut { ImDrawList_AddBezierCurve(&this, p1, p2, p3, p4, col, thickness, num_segments); }
 
 			// Image primitives
 			// - Read FAQ to understand what ImTextureID is.
 			// - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
 			// - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-			//IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
-			//IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
-			//IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All);
+			[LinkName("ImDrawList_AddImage")]
+			private static extern void ImDrawList_AddImage(DrawList* self,TextureID user_texture_id,Vec2 p_min,Vec2 p_max,Vec2 uv_min,Vec2 uv_max,uint32 col);
+			public void AddImage(TextureID user_texture_id, Vec2 p_min, Vec2 p_max, Vec2 uv_min = default, Vec2 uv_max = float[](1,1), uint32 col = 0xFFFFFFFF) mut { ImDrawList_AddImage(&this, user_texture_id, p_min, p_max, uv_min, uv_max, col); }
+			[LinkName("ImDrawList_AddImageQuad")]
+			private static extern void ImDrawList_AddImageQuad(DrawList* self,TextureID user_texture_id,Vec2 p1,Vec2 p2,Vec2 p3,Vec2 p4,Vec2 uv1,Vec2 uv2,Vec2 uv3,Vec2 uv4,uint32 col);
+			public void AddImageQuad(TextureID user_texture_id, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, Vec2 uv1 = default, Vec2 uv2 = float[](1,0), Vec2 uv3 = float[](1,1), Vec2 uv4 = float[](0,1), uint32 col = 0xFFFFFFFF) mut { ImDrawList_AddImageQuad(&this, user_texture_id, p1, p2, p3, p4, uv1, uv2, uv3, uv4, col); }
+			[LinkName("ImDrawList_AddImageRounded")]
+			private static extern void ImDrawList_AddImageRounded(DrawList* self,TextureID user_texture_id,Vec2 p_min,Vec2 p_max,Vec2 uv_min,Vec2 uv_max,uint32 col,float rounding,DrawCornerFlags rounding_corners);
+			public void AddImageRounded(TextureID user_texture_id, Vec2 p_min, Vec2 p_max, Vec2 uv_min, Vec2 uv_max, uint32 col, float rounding, DrawCornerFlags rounding_corners = .ImDrawCornerFlags_All) mut { ImDrawList_AddImageRounded(&this, user_texture_id, p_min, p_max, uv_min, uv_max, col, rounding, rounding_corners); }
 
 			// Stateful path API, add points then finish with PathFillConvex() or PathStroke()
-			//inline    void  PathClear()                                                 { _Path.Size = 0; }
-			//inline    void  PathLineTo(const ImVec2& pos)                               { _Path.push_back(pos); }
-			//inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size-1], &pos, 8) != 0) _Path.push_back(pos); }
-			//inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }  // Note: Anti-aliased filling requires points to be in clockwise order.
-			//inline    void  PathStroke(ImU32 col, bool closed, float thickness = 1.0f)  { AddPolyline(_Path.Data, _Path.Size, col, closed, thickness); _Path.Size = 0; }
-			//IMGUI_API void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 10);
-			//IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                                            // Use precomputed angles for a 12 steps circle
-			//IMGUI_API void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0);
-			//IMGUI_API void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, float rounding = 0.0f, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All);
+			public    void  PathClear() mut                                                 { _Path.Size = 0; }
+			public    void  PathLineTo(ref Vec2 pos) mut                                    { _Path.push_back(ref pos); }
+			public    void  PathLineToMergeDuplicate(ref Vec2 pos) mut                      { if (_Path.Size == 0 || Internal.MemCmp(&_Path.Data[_Path.Size-1], &pos, 8) != 0) _Path.push_back(ref pos); }
+			public    void  PathFillConvex(uint32 col) mut                                  { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }  // Note: Anti-aliased filling requires points to be in clockwise order.
+			public    void  PathStroke(uint32 col, bool closed, float thickness = 1.0f) mut { AddPolyline(_Path.Data, _Path.Size, col, closed, thickness); _Path.Size = 0; }
+			[LinkName("ImDrawList_PathArcTo")]
+			private static extern void ImDrawList_PathArcTo(DrawList* self,Vec2 center,float radius,float a_min,float a_max,int num_segments);
+			public void PathArcTo(Vec2 center, float radius, float a_min, float a_max, int num_segments = 10) mut { ImDrawList_PathArcTo(&this, center, radius, a_min, a_max, num_segments); }
+			[LinkName("ImDrawList_PathArcToFast")]
+			private static extern void ImDrawList_PathArcToFast(DrawList* self,Vec2 center,float radius,int a_min_of_12,int a_max_of_12);
+			public void PathArcToFast(Vec2 center, float radius, int a_min_of_12, int a_max_of_12) mut { ImDrawList_PathArcToFast(&this, center, radius, a_min_of_12, a_max_of_12); } // Use precomputed angles for a 12 steps circle
+			[LinkName("ImDrawList_PathBezierCurveTo")]
+			private static extern void ImDrawList_PathBezierCurveTo(DrawList* self,Vec2 p2,Vec2 p3,Vec2 p4,int num_segments);
+			public void PathBezierCurveTo(Vec2 p2, Vec2 p3, Vec2 p4, int num_segments = 0) mut { ImDrawList_PathBezierCurveTo(&this, p2, p3, p4, num_segments); }
+			[LinkName("ImDrawList_PathRect")]
+			private static extern void ImDrawList_PathRect(DrawList* self,Vec2 rect_min,Vec2 rect_max,float rounding,DrawCornerFlags rounding_corners);
+			public void PathRect(Vec2 rect_min, Vec2 rect_max, float rounding = 0.0f, DrawCornerFlags rounding_corners = .ImDrawCornerFlags_All) mut { ImDrawList_PathRect(&this, rect_min, rect_max, rounding, rounding_corners); }
 
 			// Advanced
-			//IMGUI_API void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
-			//IMGUI_API void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
-			//IMGUI_API ImDrawList* CloneOutput() const;                                  // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
+			[LinkName("ImDrawList_AddCallback")]
+			private static extern void ImDrawList_AddCallback(DrawList* self,DrawCallback callback,void* callback_data);
+			public void AddCallback(DrawCallback callback, void* callback_data) mut { ImDrawList_AddCallback(&this, callback, callback_data); }  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
+			[LinkName("ImDrawList_AddDrawCmd")]
+			private static extern void ImDrawList_AddDrawCmd(DrawList* self);
+			public void AddDrawCmd() mut { ImDrawList_AddDrawCmd(&this); } // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
+			[LinkName("ImDrawList_CloneOutput")]
+			private static extern DrawList* ImDrawList_CloneOutput(DrawList* self);
+			public DrawList* CloneOutput() mut { return ImDrawList_CloneOutput(&this); }; // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
 
 			// Advanced: Channels
 			// - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
@@ -553,24 +669,42 @@ namespace imgui_beef
 			// - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
 			//   Prefer using your own persistent copy of ImDrawListSplitter as you can stack them.
 			//   Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.
-			//inline void     ChannelsSplit(int count)    { _Splitter.Split(this, count); }
-			//inline void     ChannelsMerge()             { _Splitter.Merge(this); }
-			//inline void     ChannelsSetCurrent(int n)   { _Splitter.SetCurrentChannel(this, n); }
+			public void     ChannelsSplit(int32 count) mut  { _Splitter.Split(&this, count); }
+			public void     ChannelsMerge() mut             { _Splitter.Merge(&this); }
+			public void     ChannelsSetCurrent(int32 n) mut { _Splitter.SetCurrentChannel(&this, n); }
 
 			// Internal helpers
 			// NB: all primitives needs to be reserved via PrimReserve() beforehand!
-			//IMGUI_API void  Clear();
-			//IMGUI_API void  ClearFreeMemory();
-			//IMGUI_API void  PrimReserve(int idx_count, int vtx_count);
-			//IMGUI_API void  PrimUnreserve(int idx_count, int vtx_count);
-			//IMGUI_API void  PrimRect(const ImVec2& a, const ImVec2& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
-			//IMGUI_API void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, ImU32 col);
-			//IMGUI_API void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col);
-			//inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col){ _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
-			//inline    void  PrimWriteIdx(ImDrawIdx idx)                                 { *_IdxWritePtr = idx; _IdxWritePtr++; }
-			//inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)     { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); }
-			//IMGUI_API void  UpdateClipRect();
-			//IMGUI_API void  UpdateTextureID();
+			[LinkName("ImDrawList_Clear")]
+			private static extern void ImDrawList_Clear(DrawList* self);
+			public void Clear() mut { ImDrawList_Clear(&this); }
+			[LinkName("ImDrawList_ClearFreeMemory")]
+			private static extern void ImDrawList_ClearFreeMemory(DrawList* self);
+			public void ClearFreeMemory() mut { ImDrawList_ClearFreeMemory(&this); }
+			[LinkName("ImDrawList_PrimReserve")]
+			private static extern void ImDrawList_PrimReserve(DrawList* self,int idx_count,int vtx_count);
+			public void PrimReserve(int idx_count, int vtx_count) mut { ImDrawList_PrimReserve(&this, idx_count, vtx_count); }
+			[LinkName("ImDrawList_PrimUnreserve")]
+			private static extern void ImDrawList_PrimUnreserve(DrawList* self,int idx_count,int vtx_count);
+			public void PrimUnreserve(int idx_count, int vtx_count) mut { ImDrawList_PrimUnreserve(&this, idx_count, vtx_count); }
+			[LinkName("ImDrawList_PrimRect")]
+			private static extern void ImDrawList_PrimRect(DrawList* self,Vec2 a,Vec2 b,uint32 col);
+			public void PrimRect(Vec2 a, Vec2 b, uint32 col) mut { ImDrawList_PrimRect(&this, a, b, col); } // Axis aligned rectangle (composed of two triangles)
+			[LinkName("ImDrawList_PrimRectUV")]
+			private static extern void ImDrawList_PrimRectUV(DrawList* self,Vec2 a,Vec2 b,Vec2 uv_a,Vec2 uv_b,uint32 col);
+			public void PrimRectUV(Vec2 a, Vec2 b, Vec2 uv_a, Vec2 uv_b, uint32 col) mut { ImDrawList_PrimRectUV(&this, a, b, uv_a, uv_b, col); }
+			[LinkName("ImDrawList_PrimQuadUV")]
+			private static extern void ImDrawList_PrimQuadUV(DrawList* self,Vec2 a,Vec2 b,Vec2 c,Vec2 d,Vec2 uv_a,Vec2 uv_b,Vec2 uv_c,Vec2 uv_d,uint32 col);
+			public void PrimQuadUV(Vec2 a, Vec2 b, Vec2 c, Vec2 d, Vec2 uv_a, Vec2 uv_b, Vec2 uv_c, Vec2 uv_d, uint32 col) mut { ImDrawList_PrimQuadUV(&this, a, b, c, d, uv_a, uv_b, uv_c, uv_d, col); }
+			public void PrimWriteVtx(Vec2 pos, Vec2 uv, uint32 col) mut { _VtxWritePtr.pos = pos; _VtxWritePtr.uv = uv; _VtxWritePtr.col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
+			public void PrimWriteIdx(DrawIdx idx) mut { *_IdxWritePtr = idx; _IdxWritePtr++; }
+			public void PrimVtx(Vec2 pos, Vec2 uv, uint32 col) mut { PrimWriteIdx((DrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); }
+			[LinkName("ImDrawList_UpdateClipRect")]
+			private static extern void ImDrawList_UpdateClipRect(DrawList* self);
+			public void UpdateClipRect() mut { ImDrawList_UpdateClipRect(&this); }
+			[LinkName("ImDrawList_UpdateTextureID")]
+			private static extern void ImDrawList_UpdateTextureID(DrawList* self);
+			public void UpdateTextureID() mut { ImDrawList_UpdateTextureID(&this); }
 		};
 
 		// All draw data to render a Dear ImGui frame
@@ -589,11 +723,15 @@ namespace imgui_beef
 			public Vec2            FramebufferScale;       // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
 
 			// Functions
-			//ImDrawData()    { Valid = false; Clear(); }
+			this()    { Valid = false; CmdLists = null; CmdListsCount = TotalVtxCount = TotalIdxCount = 0; DisplayPos = DisplaySize = FramebufferScale = Vec2(0.f, 0.f); }
 			//~ImDrawData()   { Clear(); }
-			//void Clear()    { Valid = false; CmdLists = NULL; CmdListsCount = TotalVtxCount = TotalIdxCount = 0; DisplayPos = DisplaySize = FramebufferScale = ImVec2(0.f, 0.f); } // The ImDrawList are owned by ImGuiContext!
-			//IMGUI_API void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
-			//IMGUI_API void  ScaleClipRects(const ImVec2& fb_scale); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
+			public void Clear() mut    { Valid = false; CmdLists = null; CmdListsCount = TotalVtxCount = TotalIdxCount = 0; DisplayPos = DisplaySize = FramebufferScale = Vec2(0.f, 0.f); } // The ImDrawList are owned by ImGuiContext!
+			[LinkName("ImDrawData_DeIndexAllBuffers")]
+			private static extern void ImDrawData_DeIndexAllBuffers(DrawData* self);
+			public void DeIndexAllBuffers() mut { ImDrawData_DeIndexAllBuffers(&this); } // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
+			[LinkName("ImDrawData_ScaleClipRects")]
+			private static extern void ImDrawData_ScaleClipRects(DrawData* self, Vec2 fb_scale);
+			public void ScaleClipRects(Vec2 fb_scale) mut { ImDrawData_ScaleClipRects(&this, fb_scale); } // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
 		};
 
 		//-----------------------------------------------------------------------------
