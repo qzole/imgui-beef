@@ -223,7 +223,7 @@ namespace imgui_beef {
 #if !IMGUI_IMPL_OPENGL_ES2
 			int last_vertex_array_object = 0; GL.glGetIntegerv(GL.GL_VERTEX_ARRAY_BINDING, &last_vertex_array_object);
 #endif
-#if !GL_POLYGON_MODE
+#if GL_POLYGON_MODE
 			int[2] last_polygon_mode = .(0,); GL.glGetIntegerv(GL.GL_POLYGON_MODE, &last_polygon_mode);
 #endif
 			int[4] last_viewport = .(0,); GL.glGetIntegerv(GL.GL_VIEWPORT, &last_viewport);
@@ -243,7 +243,7 @@ namespace imgui_beef {
 			// Recreate the VAO every time (this is to easily allow multiple GL contexts to be rendered to. VAO are not shared among GL contexts)
 			// The renderer would actually work without any VAO bound, but then our VertexAttrib calls would overwrite the default one currently bound.
 			uint vertex_array_object = 0;
-#if IMGUI_IMPL_OPENGL_ES2
+#if !IMGUI_IMPL_OPENGL_ES2
 			GL.glGenVertexArrays(1, &vertex_array_object);
 #endif
 			SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
@@ -549,7 +549,7 @@ namespace imgui_beef {
 			vertex_shader_with_version.Append(*vertex_shader);
 			char8* cstr = vertex_shader_with_version.CStr();
 			g_VertHandle = GL.glCreateShader(GL.GL_VERTEX_SHADER);
-			GL.glShaderSource(g_VertHandle, 2, &cstr, null);
+			GL.glShaderSource(g_VertHandle, 1, &cstr, null);
 			GL.glCompileShader(g_VertHandle);
 			CheckShader(g_VertHandle, "vertex shader");
 			delete vertex_shader_with_version;
@@ -559,7 +559,7 @@ namespace imgui_beef {
 			fragment_shader_with_version.Append(*fragment_shader);
 			cstr = fragment_shader_with_version.CStr();
 			g_FragHandle = GL.glCreateShader(GL.GL_FRAGMENT_SHADER);
-			GL.glShaderSource(g_FragHandle, 2, &cstr, null);
+			GL.glShaderSource(g_FragHandle, 1, &cstr, null);
 			GL.glCompileShader(g_FragHandle);
 			CheckShader(g_FragHandle, "fragment shader");
 			delete fragment_shader_with_version;
