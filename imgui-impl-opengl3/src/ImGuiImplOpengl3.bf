@@ -71,6 +71,19 @@ namespace imgui_beef {
 		//  ES 3.0    300       "#version 300 es"   = WebGL 2.0
 		//----------------------------------------
 
+// These defines are enabled since currently the generated OpenGL Loader which is tied to this project have these enabled
+// TODO add the possibility to have a Loader which is injected for ImGuiImplOpengl3
+#if !DISABLE_DEFAULT_IMGUI_OPENGL_CAPABILITY_DEFINES
+#define GL_VERSION_3_2
+#define GL_POLYGON_MODE
+#define GL_SAMPLER_BINDING
+#endif
+
+// Desktop GL 3.2+ has glDrawElementsBaseVertex() which GL ES and WebGL don't have.
+#if !IMGUI_IMPL_OPENGL_ES2 && !IMGUI_IMPL_OPENGL_ES3 && GL_VERSION_3_2
+#define IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
+#endif
+
 		private typealias GL = ImGuiImplOpengl3GL; // will be replace by 'using static' in next release when beefy fixed it
 
 		private static uint         g_GlVersion = 0;              // Extracted at runtime using GL_MAJOR_VERSION, GL_MINOR_VERSION queries (e.g. 320 for GL 3.2)
